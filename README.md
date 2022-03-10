@@ -1,11 +1,11 @@
 # hanghae99_6th_week1_team12
 # 프로젝트 소개
 ## 국밥여지도
-국밥을 사랑하는 사람들이 모여 국밥을 더 재밌고 알차게 즐길 수 있습니다!
+국밥을 사랑하는 사람들이 모여 국밥을 더 재밌고 알차게 즐길 수 있습니다!</br>
 특정 국밥 메뉴(굴국밥, 돼지국밥 등)를 판매하는 내 위치 주변의 식당 정보와<br/>
 내가 좋아하는 국밥을 맛있게 즐기는 나만의 레시피 정보를 공유해보세요 :)
-![국밥여지도logo](https://user-images.githubusercontent.com/101086604/157632341-f0b3bf12-d24d-4f83-9ccb-b0785379ebbc.png)
-http://hyeonjun.shop/
+
+[국밥여지도 사이트로 바로가기](http://hyeonjun.shop/)
 ##  1.제작 기간 & 팀원 소개
 2022.03.07 ~ 03.10
 - 유현준
@@ -14,8 +14,11 @@ http://hyeonjun.shop/
 ## 2. 시연 연상 
 [![국밥여지도영상](https://i.ytimg.com/an_webp/Jch7Okq-Whc/mqdefault_6s.webp?du=3000&sqp=CIDxppEG&rs=AOn4CLAMGi6bchbLpe8R0nHfYaBLHiW2Wg)](https://www.youtube.com/watch?v=Jch7Okq-Whc)
 ## 3. 초안
-▼아래 링크를 눌러 주세요
-![국밥여지도초안](https://velog.io/@kr4460/%ED%95%AD%ED%95%B4-99-6%EA%B8%B0-1%EC%A3%BC%EC%B0%A8-12%EC%A1%B0-S.A)
+
+![국밥여지도초안](https://user-images.githubusercontent.com/101086604/157632341-f0b3bf12-d24d-4f83-9ccb-b0785379ebbc.png)
+
+[국밥여지도 초안 바로 보기](https://velog.io/@kr4460/%ED%95%AD%ED%95%B4-99-6%EA%B8%B0-1%EC%A3%BC%EC%B0%A8-12%EC%A1%B0-S.A)
+
 ## 4. 사용 기술
 - Hosting - AWS EC2 </br>
 - Backend - Python(Flask, jinja2), JWT </br>
