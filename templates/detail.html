@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="kr">
+<head>
+    <title>국밥여지도</title>
+    {#meta#}
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta property="og:title" content="국밥여지도"/>
+    <meta property="og:description" content="국밥러버들아 이리 모여라!"/>
+    <meta property="og:image" content="/static/image/og.png"/>
+    <link rel="shortcut icon" href="/static/image/favicon.png">
+    <link rel="icon" href="/static/image/favicon.png">
+    <!--    fontawesome cdn -->
+    <!-- about css and styling -->
+    <link rel="stylesheet" href="/static/detail.css">
+    <link href
+                  ="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src
+                    ="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+            crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=Nanum+Myeongjo&family=Yeon+Sung&display=swap"
+          rel="stylesheet">
+
+
+    <!-- 카카오지도 API 인증키, 웹 플랫폼 도메인 등록 필수 -->
+    <!-- 카카오지도 API 인증키, 웹 플랫폼 도메인 등록 필수 -->
+    <script type="text/javascript"
+            src="//dapi.kakao.com/v2/maps/sdk.js?appkey=bc88227ccc4a489780b79312d7c1cbb5&libraries=services,clusterer,drawing"></script>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+            integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+            crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.js"></script>
+    <script>
+
+        function logout() {
+            $.removeCookie('mytoken')
+            alert('로그아웃')
+            window.location.href = '/'
+        }
+
+        $(document).ready(function () {
+            $('#posting-box').hide()
+            searchs()
+            show_recipe()
+        })
+
+
+        {# 리뷰 POST 기능: 전달 데이터 => 코멘트, 닉네임, 메뉴 #}
+
+        function posting() {
+            let comment = $('#comment').val()
+            $.ajax({
+                type: "POST",
+                url: `/detail/{{ menu }}/recipe`,
+                data: {
+                    menu_give: "{{ menu }}",
+                    nick_give: "{{ nickname }}",
+                    comment_give: comment
+                },
+                success: function (response) {
+                    $('#explain_norecipe').empty()
+                    show_recipe()
+                }
+            })
+
+        }
+
+        function show_recipe() {
+            $('#recipeitems').empty()
+            $.ajax({
+                type: "GET",
+                url: `/detail/{{ menu }}/recipe`,
+                data: {},
+                success: function (response) {
+                    if (response['result'] === 'empty') {
+                        let temp_html = `아직 게시된 레시피가 없어요! 당신만의 특별한 {{ menu }} 레시피를 알려주세요!`
+                        $('#explain_norecipe').text(temp_html)
+
+                    } else if (response['result'] === 'success') {
+                        let rows = response['recipe_list']
+                        for (let i = 0; i < rows.length; i++) {
+                            let comment = rows[i]['comment_receive']
+                            let nick_receive = rows[i]['nick_receive']
+                            let temp_html = `<tr> <!-- 마우스오버, 아웃 이벤트 생성 -->
+                                <td>${nick_receive}</td>
+                                <td>${comment}</td>
+                            </tr>`
+                            $('#recipeitems').append(temp_html)
+                        }
+
+                    }
+                }
+            })
+            close_post()
+        }
+
+        function close_post() {
+            $('#posting-box').hide()
+        }
+
+        function open_post() {
+            $('#posting-box').show()
+        }
+
+        function searchs() {
+            var menu = `{{user_address}} {{ menu }}`
+            let example = []
+            remover()
+            $.ajax({
+                    type: "GET",
+                    url: "https://dapi.kakao.com/v2/local/search/keyword",
+                    data: {
+                        query: menu
+                    },
+                    headers: {Authorization: 'KakaoAK e0a7933ed8d3e52e48f47999a8528bc7'},
+                    success: function (response) {
+                        let rows = response['documents']
+                        for (let i = 0; i < rows.length; i++) {
+                            let index_x = rows[i].x
+                            let index_y = rows[i].y
+                            let placeName = rows[i].place_name
+                            let phonenum = rows[i].phone
+                            let address = rows[i].road_address_name
+                            let num = i
+                            example.push({
+                                'placename': placeName,
+                                'x': index_x,
+                                'y': index_y,
+                                'latlng': new kakao.maps.LatLng(index_y, index_x),
+                                'phone': phonenum,
+                                'address': address,
+                                'num': i,
+                            })
+                        }
+                        currentlocation(example)
+                        showmarker(example) // 검색을 끝내면,  example을 활용해서 마커를 표출
+
+                    }
+                }
+            )
+            return example
+        }
+
+    </script>
+</head>
+<body>
+<header class="title">
+    <div class="titlewrap">
+        <div class="hello_text">
+            <p><span style="color: cornflowerblue  ">{{ nickname }}</span>님 환영합니다!</p>
+        </div>
+        <div class="titlebox">
+            <div class="cup">
+                <img class='picture' src="/static/image/title.png" alt="">
+            </div>
+            <h1 class="titlename" id='realname'>
+                국밥여지도
+            </h1>
+        </div>
+        <div class="logoutbox">
+            <button class='logoutbtn' onclick="logout()">
+                <span>로 그 아 웃</span>
+            </button>
+        </div>
+</header>
+<div class="back">
+    <button class='back_button' onclick="window.location.href='/main'"><i class="bi bi-box-arrow-left"></i>
+        <p>뒤로 가기</p></button>
+</div>
+</div>
+<main>
+    <div class="wrap">
+        <div class="mapresult">
+            <div class="mapbox">
+                <!--  지도 컨테이너      -->
+                <div class='map' id='map'>
+                </div>
+            </div>
+            <div id='placelist' class="placelist">
+                <div id='explain_text'></div>
+                <table id='placetable' class='table'>
+                    <thead>
+                    <tr>
+                        <td>식당명</td>
+                        <td>연락처</td>
+                        <td>주소</td>
+                    </tr>
+                    </thead>
+                    <tbody id="placeitems">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="review">
+            <!--국밥일지 title-->
+            <!-- 테이블-->
+            <div class="showtable">
+                <table id='placetable' class='table'>
+                    <thead>
+                    <tr>
+                        <td>닉네임</td>
+                        <td>나만의 레시피</td>
+                    </tr>
+                    </thead>
+                    <tbody id="recipeitems">
+                    </tbody>
+                </table>
+                <p id='explain_norecipe' style="text-align: left; font-size: 9px"></p>
+            </div>
+            <div class="postbtn">
+                <button onclick='open_post()'> 작성하기</button>
+            </div>
+
+
+            <!--인풋박스-->
+            <div id="posting-box" class="posting-box">
+                <!-- ##인풋박스 및 저장버튼 - 저장버튼 중간에 가게하는 방법 무엇일까여? 왜 안될까요? -->
+                <div class="form-group">
+                    <input class="form-control" id="comment" rows="3"
+                           placeholder="{{ menu }}에 대한 나만의 레시피를 알려주세요!">
+                </div>
+                <div class="savebtn">
+                    <button onclick="close_post()"> 닫기
+                    </button>
+                    <button onclick="posting()">등록</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+<script>
+
+    //  여러 마커 생성 이벤트2: 마우스 오버 시 마커 사이즈 확장 + 클릭 시 마커 색상 및 사이즈 변경
+    // 지도를 생성합니다
+    // 지도를 표시할 div
+
+    var mapOption = {
+        center: new kakao.maps.LatLng(33.450701, 126.570667), // 지도의 중심좌표
+        level: 6
+    }// 지도의 확대 레벨
+    var mapContainer = document.getElementById('map')
+    var map = new kakao.maps.Map(mapContainer, mapOption);
+
+
+    // 마커 이미지 설정
+    var imgsrc = 'https://cdn-icons-png.flaticon.com/128/6244/6244020.png'
+    var imgsize = new kakao.maps.Size(30, 30)
+    var imgOption = new kakao.maps.Point(15, 30)
+    var markerimage = new kakao.maps.MarkerImage(imgsrc, imgsize, imgOption)
+    var markers = []
+    var infowindows = []
+    var infowindow =
+        new kakao.maps.InfoWindow({})
+
+    function currentlocation(example) {
+        for (let i = 0; i < example.length; i++) {
+            let x = example[0].x
+            let y = example[0].y
+            var bounds = new kakao.maps.LatLngBounds();
+            bounds.extend(new kakao.maps.LatLng(y, x));
+            // 검색된 장소 위치를 기준으로 지도 범위를 재설정합니다
+            map.setBounds(bounds);
+            map.setLevel(6)
+        }
+    }
+
+    // api에서 받아온 데이터를 편집한 example[]을 활용해서 마커 생성.
+    // example[] 활용해서 각 좌표의 장소명에 대한 infowindow 생성
+    // 마우스 오버 시, 인포 윈도우 표시
+    // position 값 할당해줄 때, value값이 전달될 수 있도록 객체 값 정리를 깔끔하게 해야함.
+    function showmarker(example) {
+        let temp_html = ''
+        {# #}
+        if (example.length === 0) {
+            $('#placetable').hide()
+
+            let explain = `<p><span style="color: cornflowerblue; font-weight: bold;">{{ user_address }}</span>에는 <span style="color: cornflowerblue; font-weight: bold;" > {{ menu }}</span> 파는 식당이 없어요...</p>`
+            $('#explain_text').append(explain)
+        } else {
+            let explain = `<p><span style="color: cornflowerblue; font-weight: bold;">{{ user_address }}</span> 에 있는 <span style="color: cornflowerblue; font-weight: bold;">{{ menu }}</span> 집은?</p>`
+            $('#explain_text').append(explain)
+        }
+
+        for (let i = 0; i < example.length; i++) {
+            let rows = example[i]
+            let title = rows['placename']
+            let phonenum = rows['phone']
+            let address = rows['address']
+            let num = i
+            let title_html = `<td  id = 'clickprac(${num})'>${title}</td> `
+            let phone_html = `<td>${phonenum}</td>`
+            let address_html = `  <td>${address}</td>`
+
+            var marker = new kakao.maps.Marker({
+                position: rows['latlng'],
+                image: markerimage,
+                num: i,
+                title: title_html
+            })
+            var iwcontents = `<div class = 'contentbox' style="width:100%; padding: 10px" >
+                                <p class = 'infowindow_text'>☑ 식당명: ${title}</p>
+                                <p class = 'infowindow_text'>☑ 주소: ${address}</p>
+                              </div>`
+            var infowindow =
+                new kakao.maps.InfoWindow({
+                    content: iwcontents,
+                    num: i
+                })
+            temp_html = `<tr class='cafename' onmouseover="listover(${num})" onmouseout="listout(${num})"> <!-- 마우스오버, 아웃 이벤트 생성 -->
+                                ${title_html} + ${phone_html} + ${address_html}
+                            </tr>`
+            $('#placeitems').append(temp_html)
+            marker.setMap(map)
+
+            kakao.maps.event.addListener(marker, 'mouseover', makeOverListener(map, marker, infowindow)) // for문을 닫고 infowindow 호출 함수를 작성해야, 모든 장소명이 잘 나타남.
+            kakao.maps.event.addListener(marker, 'mouseout', makeOutListener(infowindow)) // 마커에 마우스 오버/아웃 시에 인포윈도우 생성
+            markers.push(marker) // 마커를 다방면으로 활용하기 위해, markers라는 객체로 저장
+            infowindows.push(infowindow) // infowindow를 다방면으로 활용하기 위해, infowindows라는 객체로 저장
+        }
+    }
+
+
+    // 검색목록 각각에 지정한 마우스 오버/아웃 함수: markers, infowindows를 활용해서, 검색목록 마우스 오버 시, 인포윈도우가 마커위에 뜨게 하기
+    function listover(num) {
+        for (let i = 0; i < markers.length; i++) {
+            for (let i = 0; i < infowindows.length; i++) {
+                if (i === num) {
+                    let marker = markers[i]
+                    let infowindow = infowindows[i]
+                    openinfo(map, marker, infowindow)
+                }
+            }
+        }
+    }
+
+    function listout(num) {
+        for (let i = 0; i < markers.length; i++) {
+            for (let i = 0; i < infowindows.length; i++) {
+                if (i === num) {
+                    let marker = markers[i]
+                    let infowindow = infowindows[i]
+                    closeinfo(infowindow)
+                }
+            }
+        }
+    }
+
+    function makeOverListener(map, marker, infowindow) {
+        return function () {
+            openinfo(map, marker, infowindow)
+        }
+    }
+
+
+    function makeOutListener(infowindow) {
+        return function () {
+            closeinfo(infowindow)
+
+        }
+    }
+
+
+    function openinfo(map, marker, infowindow) {
+        infowindow.open(map, marker)
+    }
+
+    function closeinfo(infowindow) {
+        infowindow.close()
+    }
+
+
+    function remover() { // 마커, 리스트 지우는 기능을 통합한 함수.
+        removemarker()
+        removelists()
+        example = []
+        markers = []
+        infowindows = []
+    }
+
+    // 검색목록 제거 기능
+    function removelists() {
+        $('#placeitems').empty()
+
+    }
+
+    // 마커 제거 기능
+    function removemarker() {
+        for (let i = 0; i < markers.length; i++) {
+            markers[i].setMap(null)
+        }
+
+    }
+</script>
+</body>
+</html>
+
